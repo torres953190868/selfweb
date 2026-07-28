@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BranchMind | 周洪宇</title>
+    <meta name="description" content="BranchMind 项目介绍：可分支的 AI 思维工作台与 PDF 知识库。">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .project-page { min-height: 100vh; padding: 2rem; position: relative; z-index: 1; }
+        .project-shell { max-width: 1000px; margin: 0 auto; }
+        .project-back { display: inline-flex; align-items: center; gap: .5rem; color: var(--text-secondary); text-decoration: none; margin: 1rem 0 5rem; }
+        .project-back:hover { color: var(--text-primary); }
+        .project-kicker { color: var(--accent-amber); font-family: 'JetBrains Mono', monospace; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
+        .project-title { margin-top: 1rem; font-size: clamp(3rem, 8vw, 6.5rem); line-height: 1; letter-spacing: -.06em; }
+        .project-lede { max-width: 680px; margin: 2rem 0 3rem; color: var(--text-secondary); font-size: 1.2rem; }
+        .project-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .project-section { border-top: 1px solid var(--border); margin-top: 6rem; padding-top: 2rem; }
+        .project-section h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+        .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+        .project-feature { background: var(--bg-secondary); padding: 1.5rem; min-height: 170px; }
+        .project-feature h3 { margin: 1rem 0 .5rem; }
+        .project-feature p, .project-stack p { color: var(--text-secondary); font-size: .95rem; }
+        .project-number { color: var(--accent-amber); font-family: 'JetBrains Mono', monospace; }
+        .project-stack { display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); }
+        .project-stack strong { color: var(--text-primary); }
+        @media (max-width: 700px) { .project-page { padding: 1.25rem; } .project-back { margin-bottom: 4rem; } .project-grid { grid-template-columns: 1fr; } .project-stack { grid-template-columns: 1fr; gap: .3rem; } }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <main class="project-page">
+        <div class="project-shell">
+            <a class="project-back" href="../index.html#portfolio">← 返回作品集</a>
+            <span class="project-kicker">AI / Knowledge Work / 2026</span>
+            <h1 class="project-title">Branch<span class="gradient-text">Mind</span></h1>
+            <p class="project-lede">一个把 AI 对话变成思维树的工作台。你可以沿着主线继续，也可以从任意节点分叉探索；读 PDF、做笔记、提问和引用，都在同一个空间里完成。</p>
+            <div class="project-actions">
+                <a class="btn btn-primary" href="https://branchmind.cn" target="_blank" rel="noopener noreferrer">访问 BranchMind →</a>
+                <a class="btn btn-secondary" href="../index.html#portfolio">返回作品集</a>
+            </div>
+
+            <section class="project-section">
+                <h2>它解决什么问题</h2>
+                <div class="project-grid">
+                    <article class="project-feature"><span class="project-number">01</span><h3>分支式对话</h3><p>把不同假设、方向和追问保留在一棵可视化思维树中，避免线性聊天越聊越乱。</p></article>
+                    <article class="project-feature"><span class="project-number">02</span><h3>文档即知识</h3><p>上传可选中文本的 PDF，解析章节、切分内容并建立知识索引。</p></article>
+                    <article class="project-feature"><span class="project-number">03</span><h3>回答可追溯</h3><p>基于检索到的文档片段回答问题，并返回页码引用，方便回到原文核对。</p></article>
+                </div>
+            </section>
+
+            <section class="project-section">
+                <h2>技术结构</h2>
+                <div class="project-stack"><strong>应用层</strong><p>Next.js App Router · React 19 · TypeScript</p></div>
+                <div class="project-stack"><strong>交互层</strong><p>可视化节点画布 · TipTap 编辑器 · 流式 AI 响应</p></div>
+                <div class="project-stack"><strong>知识层</strong><p>PDF 解析 · heading-aware chunking · 向量与关键词混合检索</p></div>
+                <div class="project-stack"><strong>服务层</strong><p>Supabase Auth / Storage · 多模型路由 · Vercel Queues</p></div>
+            </section>
+
+            <section class="project-section">
+                <h2>项目状态</h2>
+                <p class="project-lede">BranchMind 已作为独立应用部署，欢迎通过上方入口体验完整的分支式 AI 工作流。</p>
+            </section>
+        </div>
+    </main>
+    <script src="../js/main.js"></script>
+</body>
+</html>

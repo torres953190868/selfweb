@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo E - 代码与诗</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0f0e1a;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', 'Noto Serif SC', monospace;
+        }
+        #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        .label {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(240, 235, 227, 0.5);
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="label">方案 E：代码与诗</div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+        
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const phrases = [
+            'import { life } from "universe"',
+            '人是一根有思想的芦苇',
+            'const meaning = await search()',
+            '未经审视的人生不值得过',
+            'for (let day of forever) {',
+            '我思故我在',
+            'git commit -m "be yourself"',
+            '万物皆有裂痕',
+            'console.log("Hello World")',
+            '道路漫长，充满发现',
+            'return { love: true }',
+            '知之者不如好之者',
+            'async function dream() {',
+            '生如夏花之绚烂',
+            'if (doubt) { read() }',
+            '存在先于本质',
+        ];
+
+        const cols = Math.floor(w / 20);
+        const drops = [];
+        
+        for (let i = 0; i < cols; i++) {
+            drops.push({
+                x: i * 20 + 10,
+                y: Math.random() * h,
+                speed: Math.random() * 0.3 + 0.2,
+                phrase: phrases[Math.floor(Math.random() * phrases.length)],
+                isCode: Math.random() > 0.5,
+                alpha: Math.random() * 0.15 + 0.05
+            });
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(15, 14, 26, 0.15)';
+            ctx.fillRect(0, 0, w, h);
+            
+            drops.forEach(d => {
+                d.y += d.speed;
+                if (d.y > h + 20) {
+                    d.y = -20;
+                    d.phrase = phrases[Math.floor(Math.random() * phrases.length)];
+                    d.isCode = Math.random() > 0.5;
+                }
+                
+                ctx.font = '12px "JetBrains Mono", "Noto Serif SC", monospace';
+                ctx.fillStyle = d.isCode 
+                    ? `rgba(212, 165, 116, ${d.alpha})` 
+                    : `rgba(201, 139, 139, ${d.alpha})`;
+                ctx.fillText(d.phrase, d.x, d.y);
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
