@@ -1,4 +1,4 @@
-# 博客封面视觉规范：深夜工作台
+# 博客封面视觉规范：微油画 × 轻动漫
 
 基准图：`assets/blog/learning-tool-cover.png`。
 
@@ -12,7 +12,7 @@
 
 - **构图**：16:9 横版。先从文章的核心场景或隐喻出发：它可以是城市、房间、人物、物件、自然环境或抽象空间；留出呼吸空间，不做堆砌。工作台只是其中一种选择，不是固定母题。
 - **光线**：按文章情绪选择光源。可以是台灯、屏幕、路灯、窗光、雨后反光或自然光；整体保持有层次的明暗关系，暗部仍保留细节。
-- **颜色**：背景以深海军蓝、炭黑和低饱和青绿为主；仅用柔和琥珀色做光源和重点。
+- **颜色**：配色由文章的情绪、季节与场景决定，不设固定主色。可以是明亮的晨雾、夏日绿意、旧纸的暖褐、雨天的冷灰或高饱和的城市夜色；只需控制色彩层次，避免廉价霓虹和无目的的综合色。
 - **材质**：细微胶片颗粒、柔和的油画笔触、磨砂屏幕光、纸张纤维、木桌或布面纹理。画面可以有轻动漫式的干净轮廓与柔和分层，但不要变成角色插画。
 - **表达**：用一个具体物件讲主题。抽象概念通过笔记、光线、线条、纸片或屏幕上的非文字图形来暗示。
 
@@ -33,7 +33,7 @@ Style/medium: restrained editorial illustration with subtle oil-paint texture,
 gentle anime-inspired visual layering, tactile paper and screen texture,
 cinematic but understated
 Lighting/mood: [匹配文章情绪的光线；不默认使用台灯或屏幕]
-Color palette: charcoal, deep navy, muted teal, soft amber
+Color palette: [由文章情绪、季节与场景决定；说明主色、辅助色与重点色]
 Constraints: no readable text, no letters, no logos, no watermark,
 no anime, no collage, no glossy AI look
 ```
