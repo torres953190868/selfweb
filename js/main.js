@@ -253,19 +253,6 @@ function initScrollAnimation() {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
                 
-                // 技能条动画
-                if (entry.target.classList.contains('skill-card')) {
-                    const bars = entry.target.querySelectorAll('.bar-fill');
-                    bars.forEach(bar => {
-                        const width = bar.getAttribute('data-width');
-                        if (width) {
-                            setTimeout(() => {
-                                bar.style.width = width;
-                            }, 200);
-                        }
-                    });
-                }
-
                 // 数字计数动画
                 if (entry.target.classList.contains('stat-item')) {
                     const numberEl = entry.target.querySelector('.stat-number');
@@ -278,7 +265,7 @@ function initScrollAnimation() {
     }, observerOptions);
 
     // 观察所有需要动画的元素
-    document.querySelectorAll('.portfolio-card, .blog-card, .skill-card, .about-content, .contact-content, .stat-item').forEach(el => {
+    document.querySelectorAll('.portfolio-card, .blog-card, .about-content, .contact-content, .stat-item').forEach(el => {
         el.classList.add('animate-on-scroll');
         observer.observe(el);
     });
@@ -352,36 +339,6 @@ function initFilter(containerSelector, cardSelector) {
 }
 
 // ==========================================
-// 联系表单
-// ==========================================
-function initContactForm() {
-    const form = document.getElementById('contact-form');
-    if (!form) return;
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        // 模拟发送
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span>发送中...</span>';
-        btn.disabled = true;
-
-        setTimeout(() => {
-            btn.innerHTML = '<span>发送成功!</span>';
-            btn.style.background = 'linear-gradient(135deg, #5fb3a3, #4a9082)';
-            
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.style.background = '';
-                btn.disabled = false;
-                form.reset();
-            }, 2000);
-        }, 1500);
-    });
-}
-
-// ==========================================
 // 平滑滚动
 // ==========================================
 function initSmoothScroll() {
@@ -408,7 +365,7 @@ function initTiltEffect() {
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     if (isTouch) return;
 
-    const cards = document.querySelectorAll('.portfolio-card, .skill-card, .blog-card');
+    const cards = document.querySelectorAll('.portfolio-card, .blog-card');
     
     cards.forEach(card => {
         card.addEventListener('mousemove', (e) => {
@@ -443,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollAnimation();
     initFilter('.portfolio-filter', '.portfolio-card');
     initFilter('.blog-filter', '.blog-card');
-    initContactForm();
     initSmoothScroll();
     initTiltEffect();
 });
