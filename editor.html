@@ -43,6 +43,12 @@
         </aside>
 
         <section class="editor-workspace" aria-label="文章编辑区">
+            <div id="agent-reopen-row" class="agent-reopen-row" hidden>
+                <button id="agent-reopen-button" class="agent-panel-reopen" type="button" aria-expanded="false" aria-controls="agent-panel">
+                    <span>展开 Writing Agent</span>
+                    <span class="agent-panel-reopen-icon" aria-hidden="true">‹</span>
+                </button>
+            </div>
             <div class="editor-meta-grid">
                 <label>
                     <span>Slug</span>
@@ -144,21 +150,6 @@
                 </div>
             </div>
 
-            <section class="agent-panel" aria-label="全文 Writing Agent">
-                <div class="agent-panel-heading">
-                    <div>
-                        <span class="editor-eyebrow">WRITING AGENT</span>
-                        <h2>让 Agent 读完整篇文章</h2>
-                    </div>
-                    <span class="agent-tool-hint">最多 10 个写操作</span>
-                </div>
-                <div class="agent-input-row">
-                    <textarea id="agent-instruction" rows="2" placeholder="例如：在 Attention 和 Multi-Head Attention 之间补一段过渡。"></textarea>
-                    <button id="agent-run-button" class="editor-button editor-button-primary" type="button">运行 Agent</button>
-                </div>
-                <div id="agent-result" class="agent-result" role="status" aria-live="polite"></div>
-            </section>
-
             <section id="diff-panel" class="diff-panel" hidden aria-label="AI 修改对比">
                 <div class="diff-heading">
                     <div>
@@ -184,6 +175,31 @@
                 <div id="preview-content" class="post-content editor-preview-content"></div>
             </section>
         </section>
+
+        <aside class="editor-agent-rail" aria-label="Writing Agent 工具栏">
+            <section id="agent-panel" class="agent-panel" aria-label="全文 Writing Agent">
+                <div class="agent-panel-heading">
+                    <div>
+                        <span class="editor-eyebrow">WRITING AGENT</span>
+                        <h2>让 Agent 读完整篇文章</h2>
+                    </div>
+                    <div class="agent-panel-actions">
+                        <span class="agent-tool-hint">最多 10 个写操作</span>
+                        <button id="agent-toggle-button" class="agent-panel-toggle" type="button" aria-expanded="true" aria-controls="agent-panel-content" aria-label="折叠 Writing Agent">
+                            <span class="agent-panel-toggle-label">收起</span>
+                            <span class="agent-panel-toggle-icon" aria-hidden="true">⌃</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="agent-panel-content" class="agent-panel-content">
+                    <div class="agent-input-row">
+                        <textarea id="agent-instruction" rows="2" placeholder="例如：在 Attention 和 Multi-Head Attention 之间补一段过渡。"></textarea>
+                        <button id="agent-run-button" class="editor-button editor-button-primary" type="button">运行 Agent</button>
+                    </div>
+                    <div id="agent-result" class="agent-result" role="status" aria-live="polite"></div>
+                </div>
+            </section>
+        </aside>
     </main>
 
     <dialog id="login-dialog" class="login-dialog">

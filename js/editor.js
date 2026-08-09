@@ -71,6 +71,13 @@ const rejectAiButton = document.getElementById('reject-ai-button');
 const agentInstruction = document.getElementById('agent-instruction');
 const agentRunButton = document.getElementById('agent-run-button');
 const agentResult = document.getElementById('agent-result');
+const editorLayout = document.querySelector('.editor-layout');
+const agentRail = document.querySelector('.editor-agent-rail');
+const agentPanel = document.getElementById('agent-panel');
+const agentToggleButton = document.getElementById('agent-toggle-button');
+const agentToggleLabel = agentToggleButton?.querySelector('.agent-panel-toggle-label');
+const agentReopenButton = document.getElementById('agent-reopen-button');
+const agentReopenRow = document.getElementById('agent-reopen-row');
 const postList = document.getElementById('post-list');
 const newPostButton = document.getElementById('new-post-button');
 const loginButton = document.getElementById('login-button');
@@ -89,6 +96,40 @@ let isEnsuringBlockIds = false;
 let autoSaveTimer = null;
 let selectionSnapshot = null;
 let slashMenuState = null;
+
+const AGENT_PANEL_STORAGE_KEY = 'selfweb.editor.agent.collapsed';
+
+function setAgentPanelCollapsed(collapsed, persist = true) {
+    if (!agentPanel || !agentToggleButton) return;
+    agentPanel.classList.toggle('is-collapsed', collapsed);
+    editorLayout?.classList.toggle('agent-collapsed', collapsed);
+    if (agentRail) agentRail.hidden = collapsed;
+    agentPanel.hidden = collapsed;
+    if (agentReopenRow) agentReopenRow.hidden = !collapsed;
+    if (agentReopenButton) {
+        agentReopenButton.hidden = !collapsed;
+        agentReopenButton.setAttribute('aria-expanded', String(collapsed));
+    }
+    agentToggleButton.setAttribute('aria-expanded', String(!collapsed));
+    agentToggleButton.setAttribute('aria-label', collapsed ? '展开 Writing Agent' : '折叠 Writing Agent');
+    if (agentToggleLabel) agentToggleLabel.textContent = collapsed ? '展开' : '收起';
+    if (!persist) return;
+    try {
+        window.localStorage.setItem(AGENT_PANEL_STORAGE_KEY, String(collapsed));
+    } catch {
+        // localStorage may be unavailable in private or restricted browsing contexts.
+    }
+}
+
+function restoreAgentPanelState() {
+    let collapsed = false;
+    try {
+        collapsed = window.localStorage.getItem(AGENT_PANEL_STORAGE_KEY) === 'true';
+    } catch {
+        // Keep the panel expanded when localStorage is unavailable.
+    }
+    setAgentPanelCollapsed(collapsed, false);
+}
 
 function createBlockId() {
     const suffix = window.crypto?.randomUUID?.().replaceAll('-', '').slice(0, 8)
@@ -1295,6 +1336,11 @@ function bindEvents() {
     acceptAiButton.addEventListener('click', acceptSelectionAi);
     rejectAiButton.addEventListener('click', rejectSelectionAi);
     agentRunButton.addEventListener('click', runFullAgent);
+    agentToggleButton?.addEventListener('click', () => {
+        setAgentPanelCollapsed(!agentPanel.classList.contains('is-collapsed'));
+    });
+    agentReopenButton?.addEventListener('click', () => setAgentPanelCollapsed(false));
+    restoreAgentPanelState();
     newPostButton.addEventListener('click', createNewPost);
     publishButton.addEventListener('click', publishPost);
     loginButton.addEventListener('click', openLogin);
