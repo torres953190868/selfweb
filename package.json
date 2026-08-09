@@ -1,0 +1,25 @@
+{
+  "name": "selfweb",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hongyu's personal website",
+  "scripts": {
+    "build": "npm run build:posts && vite build",
+    "build:posts": "node scripts/build-posts.js",
+    "dev": "npm run build && vite --host",
+    "test": "node scripts/test-selfweb.js"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.11.5",
+    "@tiptap/extension-details": "^2.27.2",
+    "@tiptap/extension-table": "^2.27.2",
+    "@tiptap/extension-table-cell": "^2.27.2",
+    "@tiptap/extension-table-header": "^2.27.2",
+    "@tiptap/extension-table-row": "^2.27.2",
+    "@tiptap/extension-task-item": "^2.27.2",
+    "@tiptap/extension-task-list": "^2.27.2",
+    "@tiptap/starter-kit": "^2.11.5",
+    "katex": "^0.16.22",
+    "vite": "^6.1.0"
+  }
+}

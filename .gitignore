@@ -1,2 +1,9 @@
 .vercel
 .DS_Store
+.env
+.env.*
+!.env.local.example
+posts/*.html
+node_modules/
+js/editor.bundle.js
+js/editor.bundle.js.map
