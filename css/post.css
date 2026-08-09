@@ -139,6 +139,23 @@ body.post-page {
 
 .post-content ul, .post-content ol { margin: 0 0 1.5em; padding-left: 1.4em; }
 .post-content li { margin: .45em 0; padding-left: .2em; }
+.post-content ul[data-type="taskList"] { padding-left: 0; list-style: none; }
+.post-content li[data-type="taskItem"] { display: flex; align-items: flex-start; gap: .65rem; padding-left: 0; }
+.post-content li[data-type="taskItem"] input[type="checkbox"] { width: 1rem; height: 1rem; margin-top: .65em; accent-color: var(--post-teal); }
+.post-content li[data-type="taskItem"][data-checked="true"] { color: var(--post-muted); text-decoration: line-through; }
+.post-content mark { padding: .04em .18em; color: #241d13; border-radius: 3px; background: #e7c66b; }
+.post-content [data-type="highlightBlock"] { margin: 2rem 0; padding: 1rem 1.1rem; border: 1px solid rgba(212, 165, 116, .38); border-radius: 8px; background: rgba(212, 165, 116, .1); }
+.post-content [data-type="highlightBlock"] > *:last-child { margin-bottom: 0; }
+.post-content table { width: 100%; margin: 2rem 0; border-collapse: collapse; font-family: 'Inter', 'Noto Serif SC', sans-serif; font-size: .92rem; line-height: 1.65; }
+.post-content th, .post-content td { padding: .7rem .75rem; border: 1px solid var(--post-line); text-align: left; vertical-align: top; }
+.post-content th { color: #fffdf8; background: rgba(212, 165, 116, .1); font-weight: 600; }
+.post-content td { background: rgba(244, 239, 231, .025); }
+.post-content details { margin: 2rem 0; padding: .9rem 1rem; border: 1px solid rgba(212, 165, 116, .28); border-radius: 10px; background: rgba(212, 165, 116, .045); }
+.post-content details summary { color: #fffdf8; cursor: pointer; font-family: 'Inter', 'Noto Serif SC', sans-serif; font-weight: 600; }
+.post-content details > div { padding-top: .75rem; }
+.post-content .math-block { overflow-x: auto; margin: 2rem 0; padding: .5rem 0; text-align: center; }
+.post-content .math-inline { white-space: nowrap; }
+.post-content .math-error { color: #e59a9a; font-family: 'JetBrains Mono', monospace; }
 
 .post-aside {
     margin: 2em 0;

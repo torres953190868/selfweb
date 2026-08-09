@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}｜Hongyu</title>
+    <meta name="description" content="{{description}}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    <link rel="stylesheet" href="../css/post.css">
+</head>
+<body class="post-page">
+    <nav class="post-nav"><a class="post-brand" href="../index.html">&lt;HY/&gt;</a><a class="post-back" href="../index.html#blog">← 回到博客</a></nav>
+    <main class="post-shell">
+        <header class="post-heading">
+            <div class="post-kicker">{{kicker}}</div>
+            <h1 class="post-title">{{titleHtml}}</h1>
+            <p class="post-deck">{{deck}}</p>
+            <div class="post-meta"><span>{{date}}</span><span>{{readTime}} 分钟阅读</span><span>{{author}}</span></div>
+        </header>
+        <figure class="post-cover"><img src="{{coverPath}}" alt="{{coverAlt}}"{{coverLoading}}><figcaption>{{coverCaption}}</figcaption></figure>
+        <article class="post-content">
+{{content}}
+        </article>
+        <footer class="post-footer">{{previousLink}}{{nextLink}}</footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writing Editor｜Hongyu</title>
+    <meta name="description" content="Hongyu 的文章编辑器。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/post.css">
+</head>
+<body class="editor-page">
+    <header class="editor-topbar">
+        <a class="editor-brand" href="index.html">&lt;HY/&gt; <span>Writing Editor</span></a>
+        <div class="editor-top-actions">
+            <span id="editor-status" class="editor-status" role="status" aria-live="polite">未保存</span>
+            <button id="login-button" class="editor-button" type="button">登录</button>
+            <button id="save-button" class="editor-button editor-button-primary" type="button">保存</button>
+            <button id="preview-button" class="editor-button" type="button">预览</button>
+            <button id="publish-button" class="editor-button" type="button">发布</button>
+        </div>
+    </header>
+
+    <main class="editor-layout">
+        <aside class="editor-sidebar" aria-label="文章列表">
+            <div class="editor-sidebar-heading">
+                <span class="editor-eyebrow">DRAFT SPACE</span>
+                <h1>写一篇新文章</h1>
+            </div>
+            <p>Markdown 是发布边界，草稿留在浏览器里。打开文章后，编辑器会在当前会话中维护结构化 block。</p>
+            <button id="new-post-button" class="editor-new-post" type="button">＋ 新建文章</button>
+            <div class="editor-sidebar-note">
+                <span class="editor-note-dot"></span>
+                <span>草稿自动保存到当前浏览器</span>
+            </div>
+            <div class="editor-post-list-heading">已发布文章</div>
+            <nav id="post-list" class="editor-post-list" aria-label="已发布文章列表">
+                <span class="editor-list-loading">正在读取文章……</span>
+            </nav>
+        </aside>
+
+        <section class="editor-workspace" aria-label="文章编辑区">
+            <div class="editor-meta-grid">
+                <label>
+                    <span>Slug</span>
+                    <input id="editor-slug" class="editor-meta-input" type="text" placeholder="my-new-post" autocomplete="off">
+                </label>
+                <label>
+                    <span>发布日期</span>
+                    <input id="editor-date" class="editor-meta-input" type="date">
+                </label>
+                <label>
+                    <span>分类</span>
+                    <select id="editor-category" class="editor-meta-input">
+                        <option value="building">构建</option>
+                        <option value="thinking">思考</option>
+                        <option value="practice">实践</option>
+                        <option value="essay">随笔</option>
+                    </select>
+                </label>
+            </div>
+
+            <label class="editor-title-label" for="editor-title">文章标题</label>
+            <input id="editor-title" class="editor-title-input" type="text" placeholder="输入文章标题" autocomplete="off">
+            <label class="editor-description-label" for="editor-description">摘要</label>
+            <textarea id="editor-description" class="editor-description-input" rows="2" placeholder="用于首页卡片与文章 meta description"></textarea>
+
+            <div class="editor-toolbar" role="toolbar" aria-label="格式工具栏">
+                <label class="sr-only" for="block-format">段落格式</label>
+                <select id="block-format" class="editor-select" aria-label="段落格式">
+                    <option value="paragraph">正文</option>
+                    <option value="heading1">标题 1</option>
+                    <option value="heading2">标题 2</option>
+                    <option value="heading3">标题 3</option>
+                    <option value="blockquote">引用</option>
+                    <option value="codeBlock">代码块</option>
+                </select>
+                <span class="editor-toolbar-divider" aria-hidden="true"></span>
+                <button class="editor-tool" type="button" data-command="toggleBold" aria-label="加粗"><strong>B</strong></button>
+                <button class="editor-tool editor-tool-italic" type="button" data-command="toggleItalic" aria-label="斜体"><em>I</em></button>
+                <button class="editor-tool" type="button" data-command="toggleCode" aria-label="行内代码"><code>&lt;/&gt;</code></button>
+                <span class="editor-toolbar-divider" aria-hidden="true"></span>
+                <button class="editor-tool" type="button" data-command="toggleBulletList" aria-label="无序列表">• 列表</button>
+                <button class="editor-tool" type="button" data-command="toggleOrderedList" aria-label="有序列表">1. 列表</button>
+                <button id="insert-math-button" class="editor-tool editor-tool-math" type="button" aria-label="插入数学公式">∑ 公式</button>
+                <span class="editor-toolbar-divider" aria-hidden="true"></span>
+                <button class="editor-tool" type="button" data-command="undo" aria-label="撤销">↶</button>
+                <button class="editor-tool" type="button" data-command="redo" aria-label="重做">↷</button>
+            </div>
+
+            <div id="editor-canvas" class="editor-canvas" role="textbox" aria-multiline="true" aria-label="文章正文" data-placeholder="从这里开始写作……" spellcheck="true"></div>
+            <div class="editor-hint">输入 / 打开块菜单；支持标题、列表、待办、Toggle、表格、代码、公式和 undo / redo。选中文字可调用 Selection AI。</div>
+
+            <div id="slash-menu" class="slash-menu" hidden role="listbox" aria-label="块菜单">
+                <div class="slash-menu-heading">
+                    <span>插入块</span>
+                    <span id="slash-menu-hint">输入命令筛选</span>
+                </div>
+                <div id="slash-menu-list" class="slash-menu-list"></div>
+                <div id="slash-menu-empty" class="slash-menu-empty" hidden>没有匹配的块</div>
+                <div class="slash-menu-footer"><kbd>↑</kbd><kbd>↓</kbd> 选择 · <kbd>Enter</kbd>/<kbd>Tab</kbd> 确认 · <kbd>Esc</kbd> 关闭</div>
+            </div>
+
+            <div id="selection-menu" class="selection-menu" hidden role="toolbar" aria-label="选区格式工具">
+                <div id="selection-convert-menu" class="selection-convert-menu" hidden role="menu" aria-label="转化为">
+                    <div class="selection-convert-heading">转化为</div>
+                    <button type="button" data-selection-block="heading1" role="menuitem"><span class="selection-menu-icon">H1</span><span>标题</span><kbd>#</kbd></button>
+                    <button type="button" data-selection-block="heading2" role="menuitem"><span class="selection-menu-icon">H2</span><span>副标题</span><kbd>##</kbd></button>
+                    <button type="button" data-selection-block="heading3" role="menuitem"><span class="selection-menu-icon">H3</span><span>三级标题</span><kbd>###</kbd></button>
+                    <button type="button" data-selection-block="taskList" role="menuitem"><span class="selection-menu-icon selection-menu-icon-list">☑</span><span>任务列表</span><kbd>[]</kbd></button>
+                    <button type="button" data-selection-block="orderedList" role="menuitem"><span class="selection-menu-icon selection-menu-icon-list">1.</span><span>有序列表</span><kbd>1.</kbd></button>
+                    <button type="button" data-selection-block="bulletList" role="menuitem"><span class="selection-menu-icon selection-menu-icon-list">☷</span><span>无序列表</span><kbd>−</kbd></button>
+                    <button type="button" data-selection-block="blockquote" role="menuitem"><span class="selection-menu-icon">❞</span><span>引用</span><kbd>&gt;</kbd></button>
+                    <button type="button" data-selection-block="highlightBlock" role="menuitem"><span class="selection-menu-icon selection-menu-icon-block">▤</span><span>高亮块</span></button>
+                    <button type="button" data-selection-block="codeBlock" role="menuitem"><span class="selection-menu-icon selection-menu-icon-code">&lt;/&gt;</span><span>代码块</span><kbd>```</kbd></button>
+                </div>
+
+                <div class="selection-menu-card">
+                    <button id="selection-block-trigger" class="selection-block-trigger" type="button" aria-haspopup="menu" aria-expanded="false">
+                        <span class="selection-tool-glyph selection-tool-glyph-paragraph" aria-hidden="true">T</span>
+                        <span id="selection-block-label">段落</span>
+                        <span class="selection-tool-chevron" aria-hidden="true">›</span>
+                    </button>
+                    <span class="selection-menu-divider" aria-hidden="true"></span>
+
+                    <div class="selection-format-grid">
+                        <button class="selection-format-button selection-format-button-bold" type="button" data-selection-command="toggleBold" aria-label="加粗" title="加粗">A</button>
+                        <button class="selection-format-button selection-format-button-underline-mark" type="button" data-selection-command="toggleUnderline" aria-label="下划线" title="下划线">A</button>
+                        <button class="selection-format-button selection-format-button-italic" type="button" data-selection-command="toggleItalic" aria-label="斜体" title="斜体">I</button>
+                        <button class="selection-format-button selection-format-button-underline" type="button" data-selection-command="toggleStrike" aria-label="删除线" title="删除线">S</button>
+                        <button class="selection-format-button selection-format-button-code" type="button" data-selection-command="toggleCode" aria-label="行内代码" title="行内代码">&lt;&gt;</button>
+                        <button class="selection-format-button" type="button" data-selection-command="toggleHighlight" aria-label="高亮" title="高亮">✦</button>
+                        <button class="selection-format-button" type="button" data-selection-command="setLink" aria-label="添加链接" title="添加链接">⌁</button>
+                        <button class="selection-format-button" type="button" data-selection-command="clearMarks" aria-label="清除格式" title="清除格式">⌫</button>
+                    </div>
+
+                    <form id="selection-ai-form" class="selection-ai-form">
+                        <input id="selection-ai-input" class="selection-ai-input" type="text" autocomplete="off" placeholder="Edit with AI" aria-label="告诉 AI 如何修改选中文本">
+                        <button class="selection-ai-submit" type="submit" aria-label="发送 AI 指令" title="发送">↑</button>
+                    </form>
+                </div>
+            </div>
+
+            <section class="agent-panel" aria-label="全文 Writing Agent">
+                <div class="agent-panel-heading">
+                    <div>
+                        <span class="editor-eyebrow">WRITING AGENT</span>
+                        <h2>让 Agent 读完整篇文章</h2>
+                    </div>
+                    <span class="agent-tool-hint">最多 10 个写操作</span>
+                </div>
+                <div class="agent-input-row">
+                    <textarea id="agent-instruction" rows="2" placeholder="例如：在 Attention 和 Multi-Head Attention 之间补一段过渡。"></textarea>
+                    <button id="agent-run-button" class="editor-button editor-button-primary" type="button">运行 Agent</button>
+                </div>
+                <div id="agent-result" class="agent-result" role="status" aria-live="polite"></div>
+            </section>
+
+            <section id="diff-panel" class="diff-panel" hidden aria-label="AI 修改对比">
+                <div class="diff-heading">
+                    <div>
+                        <span class="editor-eyebrow">REVIEW CHANGE</span>
+                        <h2>确认这次修改</h2>
+                    </div>
+                    <div class="diff-actions">
+                        <button id="reject-ai-button" class="editor-button" type="button">拒绝</button>
+                        <button id="accept-ai-button" class="editor-button editor-button-primary" type="button">接受</button>
+                    </div>
+                </div>
+                <div class="diff-grid">
+                    <div><span class="diff-label">原文</span><pre id="diff-original"></pre></div>
+                    <div><span class="diff-label">新文</span><pre id="diff-replacement"></pre></div>
+                </div>
+            </section>
+
+            <section id="preview-panel" class="editor-preview-panel" hidden aria-label="文章预览">
+                <div class="editor-preview-heading">
+                    <span class="editor-eyebrow">PREVIEW</span>
+                    <button id="close-preview-button" class="editor-button" type="button">关闭预览</button>
+                </div>
+                <div id="preview-content" class="post-content editor-preview-content"></div>
+            </section>
+        </section>
+    </main>
+
+    <dialog id="login-dialog" class="login-dialog">
+        <form id="login-form" method="dialog">
+            <span class="editor-eyebrow">EDITOR ACCESS</span>
+            <h2>登录编辑器</h2>
+            <p>服务端会用 HttpOnly session cookie 保护 Agent 与发布接口。</p>
+            <label for="login-password">密码</label>
+            <input id="login-password" type="password" autocomplete="current-password" required>
+            <div id="login-error" class="form-error" role="alert"></div>
+            <div class="login-actions">
+                <button id="close-login-button" class="editor-button" type="button">取消</button>
+                <button class="editor-button editor-button-primary" type="submit">登录</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="js/editor.bundle.js" defer></script>
+</body>
+</html>
