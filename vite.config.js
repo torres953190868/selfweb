@@ -1,4 +1,27 @@
 const path = require('node:path');
+const { defineConfig, loadEnv } = require('vite');
+
+const SERVER_ENV_KEYS = [
+  'DEEPSEEK_API_KEY',
+  'DEEPSEEK_BASE_URL',
+  'DEEPSEEK_MODEL',
+  'DEEPSEEK_THINKING',
+  'OPENAI_API_KEY',
+  'OPENAI_MODEL',
+  'SELFWEB_EDITOR_SECRET',
+  'SELFWEB_EDITOR_PASSWORD',
+  'GITHUB_TOKEN',
+  'GITHUB_OWNER',
+  'GITHUB_REPO',
+  'GITHUB_BRANCH'
+];
+
+function loadLocalServerEnv(mode) {
+  const localEnv = loadEnv(mode, process.cwd(), '');
+  SERVER_ENV_KEYS.forEach((key) => {
+    if (!process.env[key] && localEnv[key]) process.env[key] = localEnv[key];
+  });
+}
 
 function apiDevPlugin() {
   return {
@@ -43,18 +66,21 @@ function apiDevPlugin() {
   };
 }
 
-module.exports = {
-  plugins: [apiDevPlugin()],
-  build: {
-    lib: {
-      entry: path.resolve(__dirname, 'js/editor.js'),
-      formats: ['iife'],
-      fileName: () => 'editor.bundle.js',
-      name: 'SelfWebEditor'
-    },
-    outDir: path.resolve(__dirname, 'js'),
-    emptyOutDir: false,
-    sourcemap: false,
-    minify: true
-  }
-};
+module.exports = defineConfig(({ mode }) => {
+  loadLocalServerEnv(mode);
+  return {
+    plugins: [apiDevPlugin()],
+    build: {
+      lib: {
+        entry: path.resolve(__dirname, 'js/editor.js'),
+        formats: ['iife'],
+        fileName: () => 'editor.bundle.js',
+        name: 'SelfWebEditor'
+      },
+      outDir: path.resolve(__dirname, 'js'),
+      emptyOutDir: false,
+      sourcemap: false,
+      minify: true
+    }
+  };
+});

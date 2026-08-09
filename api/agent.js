@@ -38,31 +38,58 @@ function parseJsonResponse(text) {
     return JSON.parse(cleaned);
 }
 
-async function askOpenAI(mode, payload) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return null;
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+function modelConfig() {
+    if (process.env.DEEPSEEK_API_KEY) {
+        const baseUrl = (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '');
+        return {
+            apiKey: process.env.DEEPSEEK_API_KEY,
+            endpoint: `${baseUrl}/chat/completions`,
+            model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
+            provider: 'deepseek'
+        };
+    }
+    if (process.env.OPENAI_API_KEY) {
+        return {
+            apiKey: process.env.OPENAI_API_KEY,
+            endpoint: 'https://api.openai.com/v1/chat/completions',
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            provider: 'openai'
+        };
+    }
+    return null;
+}
+
+async function askModel(mode, payload) {
+    const config = modelConfig();
+    if (!config) return null;
     const system = mode === 'selection'
         ? '你是中文写作编辑。只修改 selectedText，保留原意与篇幅约束。只返回 JSON：{"replacement":"..."}。replacement 不能是 HTML。'
         : '你是 Writing Agent。先阅读 document，再用最少的局部工具操作完成 instruction。只返回 JSON：{"operations":[{"type":"replace_block|insert_after|insert_before|insert_math","blockId":"...","content":"...","latex":"..."}]}。最多 10 个写操作，不能返回 HTML，不能重写无关内容。';
     const user = mode === 'selection'
         ? JSON.stringify({ selectedText: payload.selectedText, instruction: payload.instruction, beforeContext: payload.beforeContext, afterContext: payload.afterContext })
         : JSON.stringify({ instruction: payload.instruction, document: payload.document });
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const body = {
+        model: config.model,
+        temperature: 0.3,
+        max_tokens: 4096,
+        response_format: { type: 'json_object' },
+        messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+        ]
+    };
+    if (config.provider === 'deepseek') {
+        body.thinking = {
+            type: process.env.DEEPSEEK_THINKING === 'enabled' ? 'enabled' : 'disabled'
+        };
+    }
+    const response = await fetch(config.endpoint, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${config.apiKey}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            model,
-            temperature: 0.3,
-            response_format: { type: 'json_object' },
-            messages: [
-                { role: 'system', content: system },
-                { role: 'user', content: user }
-            ]
-        })
+        body: JSON.stringify(body)
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error?.message || `AI 服务返回 ${response.status}`);
@@ -83,12 +110,12 @@ module.exports = async function agentHandler(req, res) {
                 errorJson(res, 400, 'selectedText 与 instruction 不能为空');
                 return;
             }
-            const generated = await askOpenAI(mode, payload);
+            const generated = await askModel(mode, payload);
             const replacement = String(generated?.replacement ?? localSelectionReplacement(payload.selectedText));
             sendJson(res, 200, { replacement });
             return;
         }
-        const generated = await askOpenAI(mode, payload);
+        const generated = await askModel(mode, payload);
         const operations = Array.isArray(generated?.operations)
             ? generated.operations.slice(0, 10)
             : localDocumentOperations(payload.instruction, payload.document);
