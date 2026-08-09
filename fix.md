@@ -198,7 +198,7 @@ B. 接受现状，在阶段二报告中说明文案已统一为 frontmatter 单�
 实际实现：
 
 ```text
-editor.html = 原生 contenteditable + document.execCommand（已 deprecated）
+admin.html = 原生 contenteditable + document.execCommand（已 deprecated）
 无 Tiptap，无 Vite，无任何构建
 ```
 
@@ -274,7 +274,7 @@ B. 保留自研编辑器，但必须写 ADR 说明：
 [ ] F0 / F1 / F2 已修复并重新构建
 [ ] npm run build 无 error，且幂等
 [ ] 提交内容包含：posts/*.html 的删除、content/、templates/、scripts/、
-    package.json、.gitignore、editor.html、js/editor.js、css/editor.css
+    package.json、.gitignore、admin.html、js/editor.js、css/editor.css
 [ ] posts/*.html 未被重新加入 git
 [ ] 推送后 Vercel 构建日志含 npm run build
 [ ] 部署后抽查至少 3 个旧文章 URL + 首页

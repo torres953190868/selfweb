@@ -583,7 +583,7 @@ function createNewPost() {
     ensureBlockIds();
     isHydrating = false;
     isDirty = false;
-    window.history.replaceState({}, '', 'editor.html');
+    window.history.replaceState({}, '', 'admin.html');
     selectionMenu.hidden = true;
     hideSlashMenu();
     diffPanel.hidden = true;
@@ -613,7 +613,7 @@ async function loadPostList() {
         const payload = await fetchJson('/api/posts');
         posts = payload.posts || [];
         postList.innerHTML = posts.length ? posts.map((post) => `
-            <a class="editor-post-link" data-slug="${escapeHtml(post.slug)}" href="editor.html?slug=${encodeURIComponent(post.slug)}">
+            <a class="editor-post-link" data-slug="${escapeHtml(post.slug)}" href="admin.html?slug=${encodeURIComponent(post.slug)}">
                 ${escapeHtml(String(post.title).replaceAll('\n', ' '))}
                 <small>${escapeHtml(post.date)} · ${escapeHtml(post.categoryLabel || post.category)}</small>
             </a>`).join('') : '<span class="editor-list-loading">还没有已发布文章</span>';
@@ -635,7 +635,7 @@ async function loadPost(slug) {
         const payload = await fetchJson(`/api/posts/${encodeURIComponent(slug)}`);
         const draft = loadDraft(slug);
         hydratePost(draft ? { metadata: draft.metadata, body: draft.body } : payload.post, draft ? 'draft' : 'server');
-        window.history.pushState({}, '', `editor.html?slug=${encodeURIComponent(slug)}`);
+        window.history.pushState({}, '', `admin.html?slug=${encodeURIComponent(slug)}`);
     } catch (error) {
         console.error('读取文章失败', error);
         setStatus(`读取文章失败：${error.message}`, 'error');
@@ -1110,7 +1110,7 @@ function validatePublish() {
     const body = getMarkdownBody();
     if (!metadata.title.trim()) return '标题不能为空';
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.slug)) return 'Slug 必须是小写 kebab-case';
-    if (['editor', 'api', 'assets', 'css', 'js', 'content', 'templates', 'posts'].includes(metadata.slug)) return 'Slug 与保留路径冲突';
+    if (['admin', 'api', 'assets', 'css', 'js', 'content', 'templates', 'posts'].includes(metadata.slug)) return 'Slug 与保留路径冲突';
     if (!metadata.description) return '摘要不能为空';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(metadata.date)) return '日期格式不正确';
     if (!body) return '正文不能为空';
@@ -1165,7 +1165,7 @@ async function submitLogin(event) {
         });
         if (typeof loginDialog.close === 'function') loginDialog.close();
         loginButton.textContent = '已登录';
-        setStatus('已登录编辑器', 'saved');
+        setStatus('已登录后台', 'saved');
     } catch (error) {
         loginError.textContent = error.message;
     }

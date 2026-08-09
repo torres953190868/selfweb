@@ -5,7 +5,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const { loadPosts } = require('../scripts/build-posts');
 const SESSION_COOKIE = 'selfweb_editor_session';
-const RESERVED_SLUGS = new Set(['editor', 'api', 'assets', 'css', 'js', 'content', 'templates', 'posts']);
+const RESERVED_SLUGS = new Set(['admin', 'api', 'assets', 'css', 'js', 'content', 'templates', 'posts']);
 
 function sendJson(res, status, payload, headers = {}) {
     res.statusCode = status;

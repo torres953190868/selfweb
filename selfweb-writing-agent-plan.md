@@ -64,7 +64,7 @@ Writing Agent Tools
 最终用户应该能够访问：
 
 ```text
-/editor
+/admin
 ```
 
 并完成：
@@ -306,7 +306,7 @@ npm run build
 selfweb/
 │
 ├── index.html
-├── editor.html
+├── admin.html
 │
 ├── content/
 │   └── posts/
@@ -686,18 +686,18 @@ published: false
 新增：
 
 ```text
-/editor
+/admin
 ```
 
 或：
 
 ```text
-/editor.html
+/admin.html
 ```
 
 用户可以直接编辑文章。
 
-纯静态部署下 `/editor` 依赖 Vercel `cleanUrls` 配置，或直接提供 `editor.html`。二选一，全站链接保持一致。
+纯静态部署下 `/admin` 依赖 Vercel `cleanUrls` 配置，或直接提供 `admin.html`。二选一，全站链接保持一致。
 
 ---
 
@@ -762,7 +762,7 @@ redo
 用户进入：
 
 ```text
-/editor
+/admin
 ```
 
 可以：
@@ -806,7 +806,7 @@ redo
 ## 6.7 阶段完成定义
 
 ```text
-[ ] /editor 可访问
+[ ] /admin 可访问
 [ ] 中文输入正常
 [ ] 基础格式正常
 [ ] undo / redo 正常
@@ -844,7 +844,7 @@ Editor → Markdown
 建议提供文章列表：
 
 ```text
-/editor
+/admin
 ```
 
 左侧：
@@ -1595,7 +1595,7 @@ Vercel 自动构建 + 部署（build 在此发生）
 ```text
 title 非空
 slug 非空
-slug 唯一，且不与保留路径冲突（editor / api / assets 等）
+slug 唯一，且不与保留路径冲突（admin / api / assets 等）
 description 非空
 date 合法
 正文非空

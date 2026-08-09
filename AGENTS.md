@@ -7,7 +7,7 @@ SelfWeb 是 Hongyu 的个人网站和写作编辑器，采用“静态网站 + V
 - 首页和文章页面最终以静态 HTML 发布。
 - 文章正文的唯一内容源是 `content/posts/*.md`。
 - `scripts/build-posts.js` 在构建时读取 Markdown，生成首页博客卡片和 `posts/*.html`。
-- `editor.html` 配合 Tiptap 编辑器支持草稿、预览、公式、选区 AI 和全文 Writing Agent。
+- `admin.html` 配合 Tiptap 编辑器支持草稿、预览、公式、选区 AI 和全文 Writing Agent。
 - 发布接口通过 GitHub API 将 Markdown 提交回仓库，再由 Vercel 构建部署。
 
 除非用户明确要求，不要把这个项目改造成需要数据库或复杂 CMS 的应用。
@@ -21,7 +21,7 @@ SelfWeb 是 Hongyu 的个人网站和写作编辑器，采用“静态网站 + V
 - `templates/post.html`：文章页源模板。
 - `index.html`：由 `templates/index.html` 生成的首页，不要把博客卡片只改在这里。
 - `posts/*.html`：由 Markdown 生成的文章页，属于构建产物并被 `.gitignore` 忽略。
-- `editor.html`：写作编辑器页面结构。
+- `admin.html`：写作编辑器页面结构，对外路由为 `/admin`。
 - `js/editor.js`：编辑器源码；构建后输出被忽略的 `js/editor.bundle.js`。
 - `js/markdown.js`：Markdown 与编辑器 HTML 之间的转换、KaTeX 渲染。
 - `api/`：Vercel Serverless Function 和本地 Vite 开发时复用的 API handler。
@@ -111,13 +111,13 @@ published: true
 - `GITHUB_REPO`
 - `GITHUB_BRANCH`（可选，默认 `main`）
 
-任何 secret 都不能写入 `index.html`、`editor.html`、`js/`、静态资源或客户端 bundle；只能从服务端环境变量读取。
+任何 secret 都不能写入 `index.html`、`admin.html`、`js/`、静态资源或客户端 bundle；只能从服务端环境变量读取。
 
 ## 页面与资源修改
 
 - 首页视觉和静态内容优先改 `templates/index.html` 与 `css/style.css`，然后运行构建。
 - 文章页布局改 `templates/post.html` 与 `css/post.css`。
-- 编辑器布局改 `editor.html` 与 `css/editor.css`，行为改 `js/editor.js` / `js/markdown.js`。
+- 编辑器布局改 `admin.html` 与 `css/editor.css`，行为改 `js/editor.js` / `js/markdown.js`。
 - 根目录首页链接使用站点根路径或相对首页路径；文章页位于 `posts/`，资源和首页链接需要注意多一层 `../`。
 - 保留现有的博客区域标记 `BLOG_POSTS_START` 和 `BLOG_POSTS_END`，构建脚本依赖它们定位卡片区域。
 - 不要提交 `posts/*.html` 或 `js/editor.bundle.js` 这类被忽略的生成文件，除非用户明确要求提交构建产物。
@@ -126,7 +126,7 @@ published: true
 
 处理用户输入、frontmatter、文章正文或 AI 返回值时，继续使用现有的 HTML/attribute escaping 和预览清理逻辑；不要把未清理的内容插入 `innerHTML`。
 
-新增 slug 时避开 `editor`、`api`、`assets`、`css`、`js`、`content`、`templates`、`posts` 等保留路径。发布接口必须保留服务端校验，不能只依赖表单校验。
+新增 slug 时避开 `admin`、`api`、`assets`、`css`、`js`、`content`、`templates`、`posts` 等保留路径。发布接口必须保留服务端校验，不能只依赖表单校验。
 
 不要用 `git reset --hard`、`git checkout --` 或删除命令覆盖用户已有改动。仓库可能存在未提交的迁移、内容或样式变更，修改时只触碰与当前任务相关的文件。
 
@@ -137,6 +137,6 @@ published: true
 1. `npm test` 通过。
 2. `npm run build` 通过，且连续构建结果稳定、无未处理异常。
 3. 文章改动会反映到 `content/posts/`，而不是只反映到生成 HTML。
-4. 涉及 UI 时检查首页、文章页和 `/editor.html` 的实际浏览器表现。
+4. 涉及 UI 时检查首页、文章页和 `/admin` 的实际浏览器表现。
 5. 涉及 API、鉴权或发布时检查匿名请求、登录请求和错误响应，不泄露 secret。
 6. 汇报中明确说明实际运行过的命令，以及尚未验证的外部依赖（例如 GitHub/OpenAI/Vercel 环境变量）。
