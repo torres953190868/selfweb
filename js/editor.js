@@ -70,12 +70,15 @@ const acceptAiButton = document.getElementById('accept-ai-button');
 const rejectAiButton = document.getElementById('reject-ai-button');
 const agentInstruction = document.getElementById('agent-instruction');
 const agentRunButton = document.getElementById('agent-run-button');
-const agentResult = document.getElementById('agent-result');
+const agentChatMessages = document.getElementById('agent-chat-messages');
+const agentMentionPopup = document.getElementById('agent-mention-popup');
 const editorLayout = document.querySelector('.editor-layout');
 const agentRail = document.querySelector('.editor-agent-rail');
 const agentPanel = document.getElementById('agent-panel');
 const agentToggleButton = document.getElementById('agent-toggle-button');
-const agentToggleLabel = agentToggleButton?.querySelector('.agent-panel-toggle-label');
+const agentNewChatButton = document.getElementById('agent-new-chat-button');
+const agentEmptyState = document.getElementById('agent-empty-state');
+const agentMentionButton = document.getElementById('agent-mention-button');
 const agentReopenButton = document.getElementById('agent-reopen-button');
 const agentReopenRow = document.getElementById('agent-reopen-row');
 const postList = document.getElementById('post-list');
@@ -96,6 +99,9 @@ let isEnsuringBlockIds = false;
 let autoSaveTimer = null;
 let selectionSnapshot = null;
 let slashMenuState = null;
+let chatHistory = [];
+let chatMessageCount = 0;
+let mentionState = null;
 
 const AGENT_PANEL_STORAGE_KEY = 'selfweb.editor.agent.collapsed';
 
@@ -112,7 +118,6 @@ function setAgentPanelCollapsed(collapsed, persist = true) {
     }
     agentToggleButton.setAttribute('aria-expanded', String(!collapsed));
     agentToggleButton.setAttribute('aria-label', collapsed ? '展开 Writing Agent' : '折叠 Writing Agent');
-    if (agentToggleLabel) agentToggleLabel.textContent = collapsed ? '展开' : '收起';
     if (!persist) return;
     try {
         window.localStorage.setItem(AGENT_PANEL_STORAGE_KEY, String(collapsed));
@@ -1022,37 +1027,192 @@ function applyAgentOperation(operation) {
     return false;
 }
 
-async function runFullAgent() {
-    const instruction = agentInstruction.value.trim();
-    if (!instruction) {
-        agentResult.textContent = '请先输入修改要求。';
+function appendChatMessage(role, text) {
+    if (agentEmptyState) agentEmptyState.hidden = true;
+    chatMessageCount += 1;
+    const message = document.createElement('div');
+    message.className = `agent-message agent-message-${role}`;
+    message.dataset.testid = `agent-chat-message-${role}-${chatMessageCount}`;
+    const body = document.createElement('div');
+    body.className = 'agent-message-body';
+    body.textContent = text;
+    message.appendChild(body);
+    agentChatMessages.appendChild(message);
+    agentChatMessages.scrollTop = agentChatMessages.scrollHeight;
+    return message;
+}
+
+function setChatMessageText(message, text) {
+    const body = message.querySelector('.agent-message-body');
+    if (body) body.textContent = text;
+    agentChatMessages.scrollTop = agentChatMessages.scrollHeight;
+}
+
+function resolveMentionedPosts(content) {
+    const mentions = [];
+    const seen = new Set();
+    for (const match of content.matchAll(/@《([^》]+)》/g)) {
+        const title = match[1].trim();
+        const post = posts.find((candidate) => String(candidate.title).replaceAll('\n', ' ') === title);
+        if (post && !seen.has(post.slug)) {
+            seen.add(post.slug);
+            mentions.push(post);
+        }
+    }
+    return mentions.slice(0, 3);
+}
+
+async function fetchChatReferences(content) {
+    const references = [];
+    for (const post of resolveMentionedPosts(content)) {
+        const title = String(post.title).replaceAll('\n', ' ');
+        try {
+            const payload = await fetchJson(`/api/posts/${encodeURIComponent(post.slug)}`);
+            const body = String(payload.post?.body || '').slice(0, 6000);
+            if (body) references.push({ slug: post.slug, title, text: body });
+        } catch (error) {
+            console.error('读取引用文章失败', error);
+            appendChatMessage('system', `引用《${title}》读取失败：${error.message}`);
+        }
+    }
+    return references;
+}
+
+function describeAgentOperation(operation) {
+    const type = operation.type || operation.tool;
+    if (type === 'replace_selection') return '替换了当前选区';
+    const target = findBlock(operation.blockId);
+    if (!target) return null;
+    const text = target.node.textContent || '';
+    const snippet = `「${text.slice(0, 12)}${text.length > 12 ? '…' : ''}」`;
+    if (type === 'replace_block') return `替换了块 ${snippet}`;
+    if (type === 'insert_after') return `在 ${snippet} 后插入内容`;
+    if (type === 'insert_before') return `在 ${snippet} 前插入内容`;
+    if (type === 'insert_math') return `在 ${snippet} 后插入公式`;
+    return null;
+}
+
+function getMentionQuery() {
+    const caret = agentInstruction.selectionStart;
+    const match = agentInstruction.value.slice(0, caret).match(/@([^\s@《》]*)$/);
+    return match ? { start: caret - match[0].length, query: match[1] } : null;
+}
+
+function renderMentionPopup() {
+    agentMentionPopup.innerHTML = mentionState.items.map((post, index) => `
+        <button type="button" class="agent-mention-item${index === mentionState.index ? ' is-active' : ''}" data-mention-index="${index}" role="option" aria-selected="${index === mentionState.index}">
+            ${escapeHtml(String(post.title).replaceAll('\n', ' '))}
+            <small>${escapeHtml(post.date)}</small>
+        </button>`).join('');
+    agentMentionPopup.hidden = false;
+}
+
+function hideMentionPopup() {
+    mentionState = null;
+    if (agentMentionPopup) agentMentionPopup.hidden = true;
+}
+
+function updateMentionPopup() {
+    const state = getMentionQuery();
+    if (!state || !posts.length) {
+        hideMentionPopup();
         return;
     }
+    const currentSlug = slugInput.value.trim();
+    const query = state.query.toLowerCase();
+    const items = posts
+        .filter((post) => post.slug !== currentSlug)
+        .filter((post) => !query
+            || String(post.title).replaceAll('\n', ' ').toLowerCase().includes(query)
+            || post.slug.toLowerCase().includes(query))
+        .slice(0, 6);
+    if (!items.length) {
+        hideMentionPopup();
+        return;
+    }
+    mentionState = { ...state, items, index: 0 };
+    renderMentionPopup();
+}
+
+function selectMention(index) {
+    const post = mentionState?.items[index];
+    if (!post) return;
+    const caret = agentInstruction.selectionStart;
+    const title = String(post.title).replaceAll('\n', ' ');
+    const token = `@《${title}》`;
+    agentInstruction.value = `${agentInstruction.value.slice(0, mentionState.start)}${token}${agentInstruction.value.slice(caret)}`;
+    const newCaret = mentionState.start + token.length;
+    agentInstruction.setSelectionRange(newCaret, newCaret);
+    agentInstruction.focus();
+    hideMentionPopup();
+}
+
+function resetChat() {
+    chatHistory = [];
+    chatMessageCount = 0;
+    hideMentionPopup();
+    if (agentChatMessages) agentChatMessages.innerHTML = '';
+    if (agentEmptyState) agentEmptyState.hidden = false;
+    if (agentInstruction) agentInstruction.value = '';
+    agentInstruction?.focus();
+}
+
+async function sendChatMessage(overrideContent) {
+    const content = String(overrideContent ?? agentInstruction.value).trim();
+    if (!content || agentRunButton.disabled) return;
+    hideMentionPopup();
+    agentInstruction.value = '';
     agentRunButton.disabled = true;
-    agentResult.classList.remove('is-error');
-    agentResult.textContent = 'Agent 正在读取文档并规划局部修改……';
+    appendChatMessage('user', content);
+    const thinking = appendChatMessage('assistant', '正在思考……');
+    thinking.classList.add('is-thinking');
     try {
+        const references = await fetchChatReferences(content);
         const payload = await fetchJson('/api/agent', {
             method: 'POST',
-            body: JSON.stringify({ mode: 'document', instruction, document: getDocument() })
+            body: JSON.stringify({
+                mode: 'chat',
+                messages: [...chatHistory, { role: 'user', content }],
+                document: getDocument(),
+                references
+            })
         });
         const operations = Array.isArray(payload.operations) ? payload.operations : [];
         if (operations.length > 10) throw new Error('本次修改范围较大，建议分步骤处理。');
+        const reply = String(payload.reply || '完成。');
+        thinking.classList.remove('is-thinking');
+        setChatMessageText(thinking, reply);
         let applied = 0;
-        for (const operation of operations) {
-            if (applyAgentOperation(operation)) applied += 1;
-            ensureBlockIds();
+        if (operations.length) {
+            const appliedDescriptions = [];
+            for (const operation of operations) {
+                const description = describeAgentOperation(operation);
+                if (applyAgentOperation(operation)) {
+                    applied += 1;
+                    if (description) appliedDescriptions.push(description);
+                }
+                ensureBlockIds();
+            }
+            const summary = document.createElement('div');
+            summary.className = 'agent-op-summary';
+            summary.textContent = applied
+                ? `已应用 ${applied} 处修改：${appliedDescriptions.join('；')}`
+                : '修改没有生效，目标块可能已变化。';
+            thinking.appendChild(summary);
         }
-        agentResult.textContent = applied ? `Agent 已完成 ${applied} 个局部修改。` : 'Agent 没有找到需要修改的位置。';
-        setStatus(applied ? 'Agent 修改已写入，可继续 undo' : 'Agent 未修改文章', applied ? '' : 'saved');
+        chatHistory.push({ role: 'user', content }, { role: 'assistant', content: reply });
+        chatHistory = chatHistory.slice(-20);
+        setStatus(applied ? 'Agent 修改已写入，可继续 undo' : 'Agent 已回复', applied ? '' : 'saved');
     } catch (error) {
-        console.error('全文 Agent 请求失败', error);
-        agentResult.classList.add('is-error');
-        agentResult.textContent = `Agent 失败：${error.message}`;
+        console.error('对话式 Agent 请求失败', error);
+        thinking.classList.remove('is-thinking');
+        thinking.classList.add('agent-message-error');
+        setChatMessageText(thinking, `请求失败：${error.message}`);
         if (error.status === 401 || error.status === 403) openLogin();
         setStatus(`Agent 请求失败：${error.message}`, 'error');
     } finally {
         agentRunButton.disabled = false;
+        agentInstruction.focus();
     }
 }
 
@@ -1335,7 +1495,52 @@ function bindEvents() {
     closePreviewButton.addEventListener('click', () => togglePreview(false));
     acceptAiButton.addEventListener('click', acceptSelectionAi);
     rejectAiButton.addEventListener('click', rejectSelectionAi);
-    agentRunButton.addEventListener('click', runFullAgent);
+    agentRunButton.addEventListener('click', () => sendChatMessage());
+    agentNewChatButton?.addEventListener('click', resetChat);
+    document.querySelectorAll('.agent-quick-action').forEach((button) => button.addEventListener('click', () => sendChatMessage(button.dataset.prompt)));
+    agentMentionButton?.addEventListener('click', () => {
+        const caret = agentInstruction.selectionStart ?? agentInstruction.value.length;
+        agentInstruction.value = `${agentInstruction.value.slice(0, caret)}@${agentInstruction.value.slice(caret)}`;
+        agentInstruction.focus();
+        agentInstruction.setSelectionRange(caret + 1, caret + 1);
+        updateMentionPopup();
+    });
+    agentInstruction.addEventListener('input', updateMentionPopup);
+    agentInstruction.addEventListener('keydown', (event) => {
+        if (event.isComposing) return;
+        if (mentionState) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const delta = event.key === 'ArrowDown' ? 1 : -1;
+                mentionState.index = (mentionState.index + delta + mentionState.items.length) % mentionState.items.length;
+                renderMentionPopup();
+                return;
+            }
+            if (event.key === 'Tab' || (event.key === 'Enter' && !event.shiftKey)) {
+                event.preventDefault();
+                selectMention(mentionState.index);
+                return;
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                hideMentionPopup();
+                return;
+            }
+        }
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendChatMessage();
+        }
+    });
+    agentInstruction.addEventListener('blur', () => window.setTimeout(() => {
+        if (!agentMentionPopup?.matches(':hover')) hideMentionPopup();
+    }, 120));
+    agentMentionPopup?.addEventListener('mousedown', (event) => {
+        const item = event.target instanceof Element ? event.target.closest('[data-mention-index]') : null;
+        if (!item) return;
+        event.preventDefault();
+        selectMention(Number(item.dataset.mentionIndex));
+    });
     agentToggleButton?.addEventListener('click', () => {
         setAgentPanelCollapsed(!agentPanel.classList.contains('is-collapsed'));
     });

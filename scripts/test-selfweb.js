@@ -48,6 +48,11 @@ async function main() {
     const response = responseRecorder();
     await publish({ method: 'POST', headers: {} }, response);
     assert.equal(response.statusCode, 401, '匿名发布必须返回 401');
+
+    const agent = require('../api/agent');
+    const agentResponse = responseRecorder();
+    await agent({ method: 'POST', headers: {} }, agentResponse);
+    assert.equal(agentResponse.statusCode, 401, '匿名 Agent 请求必须返回 401');
     console.log(`SelfWeb smoke tests passed (${publishedCount} published posts)`);
 }
 

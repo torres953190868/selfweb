@@ -93,7 +93,7 @@ published: true
 - `GET /api/posts`：返回已发布文章列表。
 - `GET /api/posts/:slug`：返回已发布文章正文和 metadata。
 - `POST /api/auth/login`：校验编辑器密码并设置 HttpOnly session cookie。
-- `POST /api/agent`：登录后执行选区 AI 或全文 Agent 操作；没有 OpenAI key 时使用本地 fallback。
+- `POST /api/agent`：登录后执行选区 AI、全文操作或对话式写作助手（chat mode，返回 `{reply, operations}`）；优先使用 DeepSeek key，其次 OpenAI key，都未配置时使用本地 fallback。
 - `POST /api/publish`：登录后校验文章并通过 GitHub API 创建或更新 `content/posts/<slug>.md`。
 
 本地开发时，`vite.config.js` 将上述 API 映射到 `api/` handler；修改 API 时要同时保持 Vercel handler 和本地 Vite middleware 的调用方式兼容。
@@ -104,7 +104,9 @@ published: true
 
 - `SELFWEB_EDITOR_SECRET`
 - `SELFWEB_EDITOR_PASSWORD`
-- `OPENAI_API_KEY`（可选；未配置时使用本地 Agent fallback）
+- `DEEPSEEK_API_KEY`（可选；优先使用的模型 key）
+- `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL` / `DEEPSEEK_THINKING`（可选）
+- `OPENAI_API_KEY`（可选；DeepSeek 未配置时使用，都未配置时使用本地 Agent fallback）
 - `OPENAI_MODEL`（可选，默认 `gpt-4o-mini`）
 - `GITHUB_TOKEN`
 - `GITHUB_OWNER`

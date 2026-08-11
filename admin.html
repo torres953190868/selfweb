@@ -177,26 +177,34 @@
         </section>
 
         <aside class="editor-agent-rail" aria-label="Writing Agent 工具栏">
-            <section id="agent-panel" class="agent-panel" aria-label="全文 Writing Agent">
-                <div class="agent-panel-heading">
-                    <div>
-                        <span class="editor-eyebrow">WRITING AGENT</span>
-                        <h2>让 Agent 读完整篇文章</h2>
-                    </div>
-                    <div class="agent-panel-actions">
-                        <span class="agent-tool-hint">最多 10 个写操作</span>
-                        <button id="agent-toggle-button" class="agent-panel-toggle" type="button" aria-expanded="true" aria-controls="agent-panel-content" aria-label="折叠 Writing Agent">
-                            <span class="agent-panel-toggle-label">收起</span>
-                            <span class="agent-panel-toggle-icon" aria-hidden="true">⌃</span>
-                        </button>
+            <section id="agent-panel" class="agent-panel" aria-label="对话式写作助手">
+                <div class="agent-topbar">
+                    <span class="agent-topbar-title"><span class="agent-topbar-icon" aria-hidden="true">✦</span> 写作助手</span>
+                    <div class="agent-topbar-actions">
+                        <button id="agent-new-chat-button" class="agent-topbar-button" data-testid="agent-new-chat-button" type="button" aria-label="新对话" title="新对话">⊕</button>
+                        <button id="agent-toggle-button" class="agent-topbar-button" type="button" aria-expanded="true" aria-controls="agent-panel-content" aria-label="折叠 Writing Agent" title="收起">»</button>
                     </div>
                 </div>
                 <div id="agent-panel-content" class="agent-panel-content">
-                    <div class="agent-input-row">
-                        <textarea id="agent-instruction" rows="2" placeholder="例如：在 Attention 和 Multi-Head Attention 之间补一段过渡。"></textarea>
-                        <button id="agent-run-button" class="editor-button editor-button-primary" type="button">运行 Agent</button>
+                    <div id="agent-chat-messages" class="agent-chat-messages" data-testid="agent-chat-messages" aria-live="polite"></div>
+                    <div id="agent-empty-state" class="agent-empty-state" data-testid="agent-empty-state">
+                        <div class="agent-avatar" aria-hidden="true">✦</div>
+                        <p class="agent-greeting">我是你的写作助手，想做点什么？</p>
+                        <div class="agent-quick-actions">
+                            <button class="agent-quick-action" data-testid="agent-quick-action-summary" type="button" data-prompt="读完整篇文章，用三句话总结它的核心观点。"><span class="agent-quick-action-icon" aria-hidden="true">☰</span> 总结这篇文章</button>
+                            <button class="agent-quick-action" data-testid="agent-quick-action-polish" type="button" data-prompt="通读全文，挑出最需要润色的两处，直接帮我润色。"><span class="agent-quick-action-icon" aria-hidden="true">✦</span> 润色语言</button>
+                            <button class="agent-quick-action" data-testid="agent-quick-action-flow" type="button" data-prompt="检查这篇文章的结构和段落衔接，在最需要的地方补一两句过渡。"><span class="agent-quick-action-icon" aria-hidden="true">⇄</span> 检查结构和过渡</button>
+                            <button class="agent-quick-action" data-testid="agent-quick-action-titles" type="button" data-prompt="根据这篇文章的内容，给我 5 个备选标题，并说明各自的角度。"><span class="agent-quick-action-icon" aria-hidden="true">✎</span> 起几个标题</button>
+                        </div>
                     </div>
-                    <div id="agent-result" class="agent-result" role="status" aria-live="polite"></div>
+                    <div class="agent-composer">
+                        <div id="agent-mention-popup" class="agent-mention-popup" data-testid="agent-mention-popup" hidden role="listbox" aria-label="引用文章"></div>
+                        <textarea id="agent-instruction" data-testid="agent-chat-input" rows="2" placeholder="和写作助手对话，输入 @ 引用文章……"></textarea>
+                        <div class="agent-composer-bar">
+                            <button id="agent-mention-button" class="agent-composer-tool" data-testid="agent-mention-button" type="button" aria-label="引用文章" title="引用文章">@</button>
+                            <button id="agent-run-button" class="agent-send-button" data-testid="agent-send-button" type="button" aria-label="发送" title="发送">↑</button>
+                        </div>
+                    </div>
                 </div>
             </section>
         </aside>

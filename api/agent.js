@@ -38,6 +38,42 @@ function parseJsonResponse(text) {
     return JSON.parse(cleaned);
 }
 
+const CHAT_SYSTEM_PROMPT = `你是 SelfWeb 的中文写作助手，嵌在作者的文章编辑器里。你可以和用户正常对话：回答写作问题、讨论文章思路、评价草稿。当用户要求修改文章时，你必须用结构化操作修改 document，而不是只给建议。
+
+规则：
+- 只返回 JSON：{"reply":"...","operations":[...]}。
+- reply 是给用户看的自然语言回复；修改完成后在 reply 里简要说明你改了什么。
+- 不需要改动文章时，operations 返回空数组。
+- operation 类型：replace_block（替换整个块）、insert_after、insert_before（在指定块后/前插入新块）、insert_math（插入公式，使用 latex 字段）。
+- blockId 必须来自用户消息里的 document.blocks；content 是 Markdown 纯文本，不能是 HTML。
+- 最多 10 个写操作，不要重写无关内容。
+- references 是用户用 @ 引用的其他文章全文，只读参考，不要修改它们。`;
+
+function normalizeChatMessages(messages) {
+    if (!Array.isArray(messages)) return [];
+    return messages
+        .filter((message) => ['user', 'assistant'].includes(message?.role))
+        .map((message) => ({ role: message.role, content: String(message.content || '').slice(0, 4000) }))
+        .filter((message) => message.content.trim())
+        .slice(-20);
+}
+
+function normalizeReferences(references) {
+    if (!Array.isArray(references)) return [];
+    return references.slice(0, 3).map((reference) => ({
+        slug: String(reference?.slug || ''),
+        title: String(reference?.title || ''),
+        text: String(reference?.text || '').slice(0, 6000)
+    })).filter((reference) => reference.slug && reference.text);
+}
+
+function localChatReply(operations) {
+    const prefix = '（未配置模型 API key，使用本地简易逻辑）';
+    return operations.length
+        ? `${prefix}已执行 ${operations.length} 个局部修改。配置 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 后即可正常对话。`
+        : `${prefix}没有找到可执行的修改。配置 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 后即可正常对话。`;
+}
+
 function modelConfig() {
     if (process.env.DEEPSEEK_API_KEY) {
         const baseUrl = (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '');
@@ -62,21 +98,38 @@ function modelConfig() {
 async function askModel(mode, payload) {
     const config = modelConfig();
     if (!config) return null;
-    const system = mode === 'selection'
-        ? '你是中文写作编辑。只修改 selectedText，保留原意与篇幅约束。只返回 JSON：{"replacement":"..."}。replacement 不能是 HTML。'
-        : '你是 Writing Agent。先阅读 document，再用最少的局部工具操作完成 instruction。只返回 JSON：{"operations":[{"type":"replace_block|insert_after|insert_before|insert_math","blockId":"...","content":"...","latex":"..."}]}。最多 10 个写操作，不能返回 HTML，不能重写无关内容。';
-    const user = mode === 'selection'
-        ? JSON.stringify({ selectedText: payload.selectedText, instruction: payload.instruction, beforeContext: payload.beforeContext, afterContext: payload.afterContext })
-        : JSON.stringify({ instruction: payload.instruction, document: payload.document });
+    let messages;
+    if (mode === 'chat') {
+        messages = [
+            { role: 'system', content: CHAT_SYSTEM_PROMPT },
+            ...payload.messages,
+            {
+                role: 'user',
+                content: JSON.stringify({
+                    instruction: payload.instruction,
+                    document: payload.document,
+                    references: payload.references
+                })
+            }
+        ];
+    } else {
+        const system = mode === 'selection'
+            ? '你是中文写作编辑。只修改 selectedText，保留原意与篇幅约束。只返回 JSON：{"replacement":"..."}。replacement 不能是 HTML。'
+            : '你是 Writing Agent。先阅读 document，再用最少的局部工具操作完成 instruction。只返回 JSON：{"operations":[{"type":"replace_block|insert_after|insert_before|insert_math","blockId":"...","content":"...","latex":"..."}]}。最多 10 个写操作，不能返回 HTML，不能重写无关内容。';
+        const user = mode === 'selection'
+            ? JSON.stringify({ selectedText: payload.selectedText, instruction: payload.instruction, beforeContext: payload.beforeContext, afterContext: payload.afterContext })
+            : JSON.stringify({ instruction: payload.instruction, document: payload.document });
+        messages = [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+        ];
+    }
     const body = {
         model: config.model,
         temperature: 0.3,
         max_tokens: 4096,
         response_format: { type: 'json_object' },
-        messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: user }
-        ]
+        messages
     };
     if (config.provider === 'deepseek') {
         body.thinking = {
@@ -104,7 +157,30 @@ module.exports = async function agentHandler(req, res) {
     if (!requireAuth(req, res)) return;
     try {
         const payload = await readJson(req);
-        const mode = payload.mode === 'document' ? 'document' : 'selection';
+        const mode = ['document', 'chat'].includes(payload.mode) ? payload.mode : 'selection';
+        if (mode === 'chat') {
+            const history = normalizeChatMessages(payload.messages);
+            const last = history.at(-1);
+            if (!last || last.role !== 'user') {
+                errorJson(res, 400, 'messages 不能为空，且最后一条必须是用户消息');
+                return;
+            }
+            const references = normalizeReferences(payload.references);
+            const generated = await askModel(mode, {
+                messages: history.slice(0, -1),
+                instruction: last.content,
+                document: payload.document,
+                references
+            });
+            if (generated) {
+                const operations = Array.isArray(generated.operations) ? generated.operations.slice(0, 10) : [];
+                sendJson(res, 200, { reply: String(generated.reply || '完成。'), operations });
+                return;
+            }
+            const operations = localDocumentOperations(last.content, payload.document);
+            sendJson(res, 200, { reply: localChatReply(operations), operations });
+            return;
+        }
         if (mode === 'selection') {
             if (!String(payload.selectedText || '').trim() || !String(payload.instruction || '').trim()) {
                 errorJson(res, 400, 'selectedText 与 instruction 不能为空');
