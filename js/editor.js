@@ -42,6 +42,7 @@ const descriptionInput = document.getElementById('editor-description');
 const slugInput = document.getElementById('editor-slug');
 const dateInput = document.getElementById('editor-date');
 const categoryInput = document.getElementById('editor-category');
+const fontSizeInput = document.getElementById('editor-font-size');
 const editorCanvas = document.getElementById('editor-canvas');
 const statusElement = document.getElementById('editor-status');
 const blockFormat = document.getElementById('block-format');
@@ -502,6 +503,7 @@ function getMetadata() {
         coverAlt: currentPost?.coverAlt || titleInput.value.trim() || 'Hongyu 的文章封面',
         readTime: currentPost?.readTime || 5,
         author: currentPost?.author || 'Hongyu',
+        fontSize: fontSizeInput?.value || 'medium',
         published: true
     };
 }
@@ -546,6 +548,14 @@ function loadDraft(slug) {
     }
 }
 
+function applyFontSizeClass() {
+    const size = fontSizeInput?.value || 'medium';
+    [editorCanvas, previewContent].forEach((element) => {
+        element.classList.toggle('post-font-small', size === 'small');
+        element.classList.toggle('post-font-large', size === 'large');
+    });
+}
+
 function applyMetadata(metadata) {
     const source = metadata || {};
     slugInput.value = source.slug || '';
@@ -553,6 +563,8 @@ function applyMetadata(metadata) {
     descriptionInput.value = source.description || '';
     dateInput.value = source.date || today();
     categoryInput.value = source.category || 'essay';
+    fontSizeInput.value = ['small', 'medium', 'large'].includes(source.fontSize) ? source.fontSize : 'medium';
+    applyFontSizeClass();
 }
 
 function hydratePost(post, source = 'server') {
@@ -581,6 +593,7 @@ function createNewPost() {
         coverAlt: 'Hongyu 的文章封面',
         readTime: 5,
         author: 'Hongyu',
+        fontSize: 'medium',
         body: ''
     };
     applyMetadata(currentPost);
@@ -1486,8 +1499,9 @@ function bindEvents() {
         if (!selectionMenu.matches(':hover') && !selectionMenu.contains(document.activeElement)) selectionMenu.hidden = true;
         if (!slashMenu?.matches(':hover')) hideSlashMenu();
     }, 120));
-    [titleInput, descriptionInput, slugInput, dateInput, categoryInput].forEach((field) => field.addEventListener('input', () => {
+    [titleInput, descriptionInput, slugInput, dateInput, categoryInput, fontSizeInput].forEach((field) => field.addEventListener('input', () => {
         if (field === slugInput) updateActivePostLink();
+        if (field === fontSizeInput) applyFontSizeClass();
         markDirty();
     }));
     saveButton.addEventListener('click', () => saveDraft(false));

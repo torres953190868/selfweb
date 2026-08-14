@@ -130,6 +130,7 @@ function validatePublishPayload(payload, existingSlugs = new Set()) {
         coverAlt: metadata.coverAlt || title,
         readTime: Number(metadata.readTime) || 5,
         author: metadata.author || 'Hongyu',
+        fontSize: ['small', 'medium', 'large'].includes(metadata.fontSize) ? metadata.fontSize : 'medium',
         published: true
     };
 }
@@ -141,6 +142,7 @@ function frontmatterValue(value) {
 
 function serializePost(metadata, body) {
     const fields = ['slug', 'title', 'description', 'date', 'category', 'categoryLabel', 'cardExcerpt', 'cover', 'coverAlt', 'readTime', 'author', 'published'];
+    if (metadata.fontSize && metadata.fontSize !== 'medium') fields.push('fontSize');
     const frontmatter = fields.map((field) => `${field}: ${frontmatterValue(metadata[field])}`).join('\n');
     return `---\n${frontmatter}\n---\n\n${String(body).trim()}\n`;
 }

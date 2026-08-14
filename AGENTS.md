@@ -69,7 +69,7 @@ author: Hongyu
 published: true
 ```
 
-常用可选字段包括 `cardExcerpt`、`kicker`、`deck`、`coverAlt`、`coverCaption`、`coverLoading`、`previousUrl`、`previousLabel`、`nextUrl`、`nextLabel`。涉及首页卡片文案时优先使用 `cardExcerpt`，不要在生成后的 `index.html` 中硬编码。
+常用可选字段包括 `cardExcerpt`、`kicker`、`deck`、`coverAlt`、`coverCaption`、`coverLoading`、`previousUrl`、`previousLabel`、`nextUrl`、`nextLabel`、`fontSize`（正文字号档位：`small` / `medium` / `large`，默认 `medium`，构建后在文章页 `<body>` 上输出 `post-font-*` class）。涉及首页卡片文案时优先使用 `cardExcerpt`，不要在生成后的 `index.html` 中硬编码。
 
 `published: true` 的文章才会生成公开的 `posts/<slug>.html` 并出现在首页和编辑器文章列表中；`published: false` 仍保留在 `content/posts/`，但不应出现在公开构建产物中。
 

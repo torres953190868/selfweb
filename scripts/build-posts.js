@@ -103,6 +103,10 @@ function parseFrontmatter(source, fileName) {
     throw new Error(`${fileName}: published must be true or false`);
   }
 
+  if (metadata.fontSize !== undefined && !['small', 'medium', 'large'].includes(metadata.fontSize)) {
+    throw new Error(`${fileName}: fontSize must be small, medium or large`);
+  }
+
   return {
     metadata,
     body: lines.slice(endIndex + 1).join('\n').trim()
@@ -371,6 +375,7 @@ function renderPost(template, post) {
     '{{coverAlt}}': escapeAttribute(metadata.coverAlt || metadata.title),
     '{{coverLoading}}': coverLoading,
     '{{coverCaption}}': escapeHtml(metadata.coverCaption || ''),
+    '{{fontClass}}': metadata.fontSize && metadata.fontSize !== 'medium' ? ` post-font-${metadata.fontSize}` : '',
     '{{content}}': renderMarkdown(post.body),
     '{{previousLink}}': previousLink,
     '{{nextLink}}': nextLink
